@@ -1,9 +1,7 @@
 let canvas = document.getElementById("canvas");
 let context = canvas.getContext("2d");
-!let width = window.innerWidth;
-let width = 500px
-!let height = window.innerHeight;
-let height = 500px
+let width = window.body.clientWidth;
+let height = window.body.clientHeight;
 let particles = [];
 let particleSettings = {
   count: 20,
