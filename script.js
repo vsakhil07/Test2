@@ -4,8 +4,8 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 let particles = [];
 let particleSettings = {
-  count: 500,
-  gravity: 0.05,
+  count: 20,
+  gravity: 0.001,
   wave: 0,
 };
 
