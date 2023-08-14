@@ -1,51 +1,96 @@
-// script.js
-const Confettiful = function(el) {
-    this.el = el;
-    this.containerEl = null;
-    
-    this.confettiFrequency = 3;
-    this.confettiColors = ['#fce18a', '#ff726d', '#b48def', '#f4306d'];
-    this.confettiAnimations = ['slow', 'medium', 'fast'];
-    
-    this._setupElements();
-    this._renderConfetti();
+let canvas = document.getElementById("canvas");
+let context = canvas.getContext("2d");
+let width = window.innerWidth;
+let height = window.innerHeight;
+let particles = [];
+let particleSettings = {
+  count: 500,
+  gravity: 0.05,
+  wave: 0,
 };
 
-Confettiful.prototype._setupElements = function() {
-    const containerEl = document.createElement('div');
-    const elPosition = this.el.style.position;
-    
-    if (elPosition !== 'relative' && elPosition !== 'absolute') {
-        this.el.style.position = 'relative';
+window.requestAnimationFrame =
+  window.requestAnimationFrame ||
+  window.webkitRequestAnimationFrame ||
+  window.mozRequesAnimationFrame ||
+  window.oRequestAnimationFrame ||
+  window.msRequestAnimationFrame ||
+  function (callback) {
+    window.setTimeout(callback, 1000 / 60);
+  };
+
+//random number between range
+function randomNumberGenerator(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+//Creates Confetti (particles)
+function createConfetti() {
+  while (particles.length < particleSettings.count) {
+    let particle = new Particle();
+
+    //Random colors
+    particle.color = `rgb( ${randomNumberGenerator(
+      0,
+      255
+    )}, ${randomNumberGenerator(0, 255)}, ${randomNumberGenerator(0, 255)}`;
+    //Store particles
+    particles.push(particle);
+  }
+}
+
+//Starts the confetti
+const startConfetti = () => {
+  context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  createConfetti();
+  for (let i in particles) {
+    //Movement and shaking efffect
+    particleSettings.wave += 0.4;
+    particles[i].tiltAngle += randomNumberGenerator(0.01, 2);
+    particles[i].y +=
+      (Math.sin(particleSettings.wave) +
+        particles[i].area +
+        particleSettings.gravity) *
+      0.2;
+    particles[i].tilt = Math.cos(particles[i].tiltAngle) * 0.3;
+    //Draw the particle on screen
+    particles[i].draw();
+    //if particle has crosses the screen height
+    if (particles[i].y > height) {
+      particles[i] = new Particle();
+      //Random colors
+      particles[i].color = `rgb( ${randomNumberGenerator(
+        0,
+        255
+      )}, ${randomNumberGenerator(0, 255)}, ${randomNumberGenerator(0, 255)}`;
     }
-    
-    containerEl.classList.add('confetti-container');
-    
-    this.el.appendChild(containerEl);
-    
-    this.containerEl = containerEl;
+  }
+  animationTimer = requestAnimationFrame(startConfetti);
 };
 
-Confettiful.prototype._renderConfetti = function() {
-    this.confettiInterval = setInterval(() => {
-        const confettiEl = document.createElement('div');
-        const confettiSize = (Math.floor(Math.random() * 3) + 7) + 'px';
-        const confettiBackground = this.confettiColors[Math.floor(Math.random() * this.confettiColors.length)];
-        const confettiLeft = (Math.floor(Math.random() * this.el.offsetWidth)) + 'px';
-        const confettiAnimation = this.confettiAnimations[Math.floor(Math.random() * this.confettiAnimations.length)];
-        
-        confettiEl.classList.add('confetti', 'confetti--animation-' + confettiAnimation);
-        confettiEl.style.left = confettiLeft;
-        confettiEl.style.width = confettiSize;
-        confettiEl.style.height = confettiSize;
-        confettiEl.style.backgroundColor = confettiBackground;
-        
-        confettiEl.removeTimeout = setTimeout(function() {
-            confettiEl.parentNode.removeChild(confettiEl);
-        }, 3000);
-        
-        this.containerEl.appendChild(confettiEl);
-    }, 25);
+function Particle() {
+  this.x = Math.random() * width;
+  this.y = Math.random() * height - height;
+  this.area = randomNumberGenerator(10, 15);
+  this.tilt = randomNumberGenerator(-4, 4);
+  this.tiltAngle = 0;
+}
+
+//Mathod associated with particle
+Particle.prototype = {
+  draw: function () {
+    context.beginPath();
+    context.lineWidth = this.area;
+    context.strokeStyle = this.color;
+    this.x = this.x + this.tilt;
+    context.moveTo(this.x + this.area / 2, this.y);
+    context.lineTo(this.x, this.y + this.tilt + this.area / 2);
+    context.stroke();
+  },
 };
 
-window.confettiful = new Confettiful(document.querySelector('.js-container'));
+window.onload = () => {
+  canvas.width = width;
+  canvas.height = height;
+  window.requestAnimationFrame(startConfetti);
+};
